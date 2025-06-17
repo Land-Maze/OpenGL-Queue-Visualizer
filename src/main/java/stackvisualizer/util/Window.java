@@ -140,7 +140,7 @@ public class Window {
         System.out.println("Creating OpenGL capabilities...");
         GL.createCapabilities();
 
-        glClearColor(0f, 0f, 0f, 1f); // black background
+        glClearColor(0.05f, 0.05f, 0.05f, 1f);
         glEnable(GL_DEPTH_TEST);
 
         System.out.println("Setting up callbacks...");
@@ -171,6 +171,10 @@ public class Window {
 
     public int getHeight() {
         return height;
+    }
+
+    public long getHandle() {
+        return windowHandle;
     }
 
     public boolean isResized() {

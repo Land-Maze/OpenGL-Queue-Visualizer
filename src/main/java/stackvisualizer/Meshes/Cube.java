@@ -1,4 +1,4 @@
-package stackvisualizer.core;
+package stackvisualizer.Meshes;
 
 public class Cube {
     private static final float[] VERTICES = {

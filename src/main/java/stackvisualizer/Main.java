@@ -13,21 +13,23 @@ import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glViewport;
 
-import stackvisualizer.core.Cube;
+import stackvisualizer.Meshes.Cube;
 import stackvisualizer.render.Camera;
 import stackvisualizer.render.Entity;
 import stackvisualizer.render.Material;
 import stackvisualizer.render.Mesh;
 import stackvisualizer.render.ModelMatrix;
+import stackvisualizer.render.RectRenderer;
 import stackvisualizer.render.Renderer;
 import stackvisualizer.render.Shader;
 import stackvisualizer.render.TextRenderer;
+import stackvisualizer.ui.Label;
+import stackvisualizer.ui.UIManager;
 import stackvisualizer.util.Window;
 
 public class Main {
     @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
-
         /***********************************************************
          * ============================================================
          * Initialization of the application
@@ -39,6 +41,35 @@ public class Main {
         Camera camera = new Camera();
 
         TextRenderer textRenderer = new TextRenderer("fonts/RobotoMono-VariableFont_wght.ttf", 18f);
+        RectRenderer rectRenderer = new RectRenderer();
+        rectRenderer.init();
+
+        
+        UIManager uiManager = new UIManager(rectRenderer, textRenderer);
+
+        /***********************************************************
+         * ============================================================
+         * Adding UI elements
+         * ============================================================
+         ***********************************************************/
+
+        /***********************************************************
+         * Top left corner text overlay
+         ***********************************************************/
+        uiManager.add("fps-label", new Label("FPS: 0", 10, 20, 200, 30));
+        uiManager.add("total-vertices-label", new Label("Total Vertices: 0", 10, 40, 200, 30));
+        uiManager.add("view-position-label", new Label("View Position: [x: 0.0, y: 0.0, z: 0.0]", 10, 60, 300, 30));
+        uiManager.add("controls-label", new Label("Use mouse to rotate, pan, and zoom", 10, 80, 300, 30));
+        uiManager.add("reset-camera-label", new Label("Press <Space> to reset camera", 10, 100, 300, 30));
+        uiManager.add("reset-scene-label", new Label("Press <R> to reset the scene", 10, 120, 300, 30));
+
+        /***********************************************************
+         * Bottom left corner text overlay
+         ***********************************************************/
+        uiManager.add("total-memory-label", new Label("Total Memory: 0 MB", 10, window.getHeight() - 80, 300, 30));
+        uiManager.add("used-memory-label", new Label("Used Memory: 0 MB", 10, window.getHeight() - 60, 300, 30));
+        uiManager.add("free-memory-label", new Label("Free Memory: 0 MB", 10, window.getHeight() - 40, 300, 30));
+        uiManager.add("max-memory-label", new Label("Max Memory: 0 MB", 10, window.getHeight() - 20, 300, 30));
 
         long lastTime = System.nanoTime();
         int frames = 0;
@@ -218,30 +249,23 @@ public class Main {
             /***********************************************************
              * Top left corner text overlay
              ***********************************************************/
-
-            textRenderer.renderText(String.format("FPS: %.2f", fps), 10, 20);
-            textRenderer.renderText(String.format("Total Vertices: %d", totalVertices), 10, 40);
-            textRenderer.renderText(
-                    String.format("View Position: [x: %.2f, y: %.2f, z: %.2f]", viewPos.x, viewPos.y, viewPos.z), 10,
-                    60);
-            textRenderer.renderText("Use mouse to rotate, pan, and zoom", 10, 80);
-            textRenderer.renderText("Press <Space> to reset camera", 10, 100);
-            textRenderer.renderText("Press <R> to reset the scene", 10, 120);
-            textRenderer.renderText("Press <X> to place random object (distance = 2)", 10, 140);
-            textRenderer.renderText("Press <F> to place 100 random object (distance = 10)", 10, 160);
+            uiManager.get("fps-label").setText(String.format("FPS: %.2f", fps));
+            uiManager.get("total-vertices-label").setText(String.format("Total Vertices: %d", totalVertices));
+            uiManager.get("view-position-label").setText(
+                    String.format("View Position: [x: %.2f, y: %.2f, z: %.2f]", viewPos.x, viewPos.y, viewPos.z));
 
             /***********************************************************
              * Bottom left corner text overlay
              ***********************************************************/
-
-            textRenderer.renderText(String.format("Used Memory: %.2f MB", usedMemory / 1024.0 / 1024.0), 10,
-                    window.getHeight() - 40);
-            textRenderer.renderText(String.format("Free Memory: %.2f MB", freeMemory / 1024.0 / 1024.0), 10,
-                    window.getHeight() - 20);
-            textRenderer.renderText(String.format("Max Memory: %.2f MB", maxMemory / 1024.0 / 1024.0), 10,
-                    window.getHeight() - 60);
-            textRenderer.renderText(String.format("Total Memory: %.2f MB", runtime.totalMemory() / 1024.0 / 1024.0), 10,
-                    window.getHeight() - 80);
+            uiManager.get("total-memory-label").setText(String.format("Total Memory: %.2f MB", runtime.totalMemory() / 1024.0 / 1024.0));
+            uiManager.get("used-memory-label").setText(String.format("Used Memory: %.2f MB", usedMemory / 1024.0 / 1024.0));
+            uiManager.get("free-memory-label").setText(String.format("Free Memory: %.2f MB", freeMemory / 1024.0 / 1024.0));
+            uiManager.get("max-memory-label").setText(String.format("Max Memory: %.2f MB", maxMemory / 1024.0 / 1024.0));
+                    
+            
+            
+            uiManager.updateAll();
+            uiManager.renderAll();
 
             window.update();
         }
