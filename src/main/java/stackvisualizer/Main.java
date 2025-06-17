@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
 import static org.lwjgl.opengl.GL11.GL_PROJECTION;
 import static org.lwjgl.opengl.GL11.glLoadIdentity;
@@ -31,7 +32,7 @@ public class Main {
         Camera camera = new Camera();
         Shader shader;
 
-        Vector3f lightPos = new Vector3f(1.2f, 1.0f, 2.0f);
+        float radius = 5.0f;
 
         renderer.init();
 
@@ -71,6 +72,12 @@ public class Main {
                 window.setResized(false);
             }
 
+            float time = (float) glfwGetTime();
+            Vector3f lightPos = new Vector3f(
+                (float)Math.sin(time) * radius,
+                1.0f + (float)Math.sin(time * 2.0f) * 0.5f,
+                (float)Math.cos(time) * radius
+            );
 
             if (window.consumeReset()) {
                 camera.reset();
