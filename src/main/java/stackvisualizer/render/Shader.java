@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
@@ -28,41 +29,32 @@ import static org.lwjgl.opengl.GL20.glShaderSource;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL20.glUseProgram;
-import org.lwjgl.system.MemoryStack;
 
 public class Shader {
     private final int programId;
 
     public Shader(String vertexPath, String fragmentPath) throws IOException {
-        String vertexCode = Files.readString(Paths.get(vertexPath));
-        String fragmentCode = Files.readString(Paths.get(fragmentPath));
+        String vertexCode = new String(Files.readAllBytes(Paths.get(vertexPath)));
+        String fragmentCode = new String(Files.readAllBytes(Paths.get(fragmentPath)));
 
-        int vertexShader = compileShader(vertexCode, GL_VERTEX_SHADER);
-        int fragmentShader = compileShader(fragmentCode, GL_FRAGMENT_SHADER);
+        int vertexId = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexId, vertexCode);
+        glCompileShader(vertexId);
+        checkCompileErrors(vertexId, "VERTEX");
+
+        int fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentId, fragmentCode);
+        glCompileShader(fragmentId);
+        checkCompileErrors(fragmentId, "FRAGMENT");
 
         programId = glCreateProgram();
-        glAttachShader(programId, vertexShader);
-        glAttachShader(programId, fragmentShader);
+        glAttachShader(programId, vertexId);
+        glAttachShader(programId, fragmentId);
         glLinkProgram(programId);
+        checkCompileErrors(programId, "PROGRAM");
 
-        if (glGetProgrami(programId, GL_LINK_STATUS) == GL_FALSE) {
-            throw new RuntimeException("Program linking failed: " + glGetProgramInfoLog(programId));
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-    }
-
-    private int compileShader(String code, int type) {
-        int shader = glCreateShader(type);
-        glShaderSource(shader, code);
-        glCompileShader(shader);
-
-        if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL_FALSE) {
-            throw new RuntimeException("Shader compilation failed: " + glGetShaderInfoLog(shader));
-        }
-
-        return shader;
+        glDeleteShader(vertexId);
+        glDeleteShader(fragmentId);
     }
 
     public void bind() {
@@ -74,17 +66,34 @@ public class Shader {
     }
 
     public void setUniform(String name, Matrix4f matrix) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer fb = stack.mallocFloat(16);
-            matrix.get(fb);
-            glUniformMatrix4fv(glGetUniformLocation(programId, name), false, fb);
-        }
+        int location = glGetUniformLocation(programId, name);
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+        matrix.get(buffer);
+        glUniformMatrix4fv(location, false, buffer);
     }
 
     public void setUniform(String name, Vector4f vec) {
-        glUniform4f(glGetUniformLocation(programId, name), vec.x, vec.y, vec.z, vec.w);
+        int location = glGetUniformLocation(programId, name);
+        glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
     }
-    
+
+    private void checkCompileErrors(int id, String type) {
+        int status;
+        if (type.equals("PROGRAM")) {
+            status = glGetProgrami(id, GL_LINK_STATUS);
+            if (status == GL_FALSE) {
+                String log = glGetProgramInfoLog(id);
+                System.err.println("Shader Program linking error: " + log);
+            }
+        } else {
+            status = glGetShaderi(id, GL_COMPILE_STATUS);
+            if (status == GL_FALSE) {
+                String log = glGetShaderInfoLog(id);
+                System.err.println("Shader compilation error in " + type + ": " + log);
+            }
+        }
+    }
+
     public void cleanup() {
         glDeleteProgram(programId);
     }
