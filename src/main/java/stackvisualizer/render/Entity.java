@@ -4,10 +4,10 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Entity {
-  private final String name;
-  private final Mesh mesh;
-  private final Material material;
-  private final ModelMatrix modelMatrix;
+  private String name;
+  private Mesh mesh;
+  private Material material;
+  private ModelMatrix modelMatrix;
 
   /**
    * Creates an Entity with a name, mesh, material, and model matrix.
@@ -41,9 +41,37 @@ public class Entity {
   }
 
   public void cleanup() {
-    mesh.cleanup();
     material.reset();
-    material.getShader().cleanup();
+  }
+
+  public void delete() {
+    mesh.cleanup();
+    material.cleanup();
+  }
+
+  public String getName() {
+    return name;
+  }
+  public Mesh getMesh() {
+    return mesh;
+  }
+  public Material getMaterial() {
+    return material;
+  }
+  public ModelMatrix getModelMatrix() {
+    return modelMatrix;
+  }
+  public void setName(String name) {
+    this.name = name;
+  }
+  public void setMesh(Mesh mesh) {
+    this.mesh = mesh;
+  }
+  public void setMaterial(Material material) {
+    this.material = material;
+  }
+  public void setModelMatrix(ModelMatrix modelMatrix) {
+    this.modelMatrix = modelMatrix;
   }
 
   @Override

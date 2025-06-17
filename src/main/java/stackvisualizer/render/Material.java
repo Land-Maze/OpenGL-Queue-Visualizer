@@ -23,6 +23,10 @@ public class Material {
     shader.setUniform("viewPos", viewPos);
   }
 
+  public void cleanup() {
+    shader.cleanup();
+  }
+
   public void unbind() {
     shader.unbind();
   }

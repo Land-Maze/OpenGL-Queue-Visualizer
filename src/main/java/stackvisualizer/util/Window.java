@@ -2,7 +2,10 @@ package stackvisualizer.util;
 
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_X;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -40,6 +43,7 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.system.MemoryUtil.NULL;
+
 public class Window {
 
     private static final float MOUSE_SENSITIVITY = 2f;
@@ -61,8 +65,13 @@ public class Window {
     private boolean middleMouseDown = false;
     private boolean resetPressed = false;
 
+    private boolean resetScenePressed = false;
+    private boolean placeRandomObjectPressed = false;
+    private boolean place100RandomObjectsPressed = false;
+
     /**
-     * Constructs a new Window instance with specified dimensions, title, and VSync setting.
+     * Constructs a new Window instance with specified dimensions, title, and VSync
+     * setting.
      *
      * @param width  the width of the window in pixels
      * @param height the height of the window in pixels
@@ -80,10 +89,12 @@ public class Window {
     /**
      * Initializes the GLFW window and OpenGL context.
      * <p>
-     * Sets up callbacks for resizing and key input, centers the window on the primary monitor,
+     * Sets up callbacks for resizing and key input, centers the window on the
+     * primary monitor,
      * and makes the OpenGL context current.
      *
-     * @throws IllegalStateException if GLFW cannot be initialized or window creation fails
+     * @throws IllegalStateException if GLFW cannot be initialized or window
+     *                               creation fails
      */
     public void init() {
         if (!glfwInit()) {
@@ -113,10 +124,9 @@ public class Window {
 
         GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         glfwSetWindowPos(
-            windowHandle,
-            (vidmode.width() - width) / 2,
-            (vidmode.height() - height) / 2
-        );
+                windowHandle,
+                (vidmode.width() - width) / 2,
+                (vidmode.height() - height) / 2);
 
         glfwMakeContextCurrent(windowHandle);
 
@@ -124,12 +134,13 @@ public class Window {
 
         glfwShowWindow(windowHandle);
 
-        System.out.println("Window created: " + title + " (" + width + "x" + height + ") with VSync " + (vSync ? "enabled" : "disabled"));
+        System.out.println("Window created: " + title + " (" + width + "x" + height + ") with VSync "
+                + (vSync ? "enabled" : "disabled"));
 
         System.out.println("Creating OpenGL capabilities...");
         GL.createCapabilities();
 
-        glClearColor(0f, 0f, 0f, 1f);  // black background
+        glClearColor(0f, 0f, 0f, 1f); // black background
         glEnable(GL_DEPTH_TEST);
 
         System.out.println("Setting up callbacks...");
@@ -179,38 +190,48 @@ public class Window {
     }
 
     private void setupCallbacks() {
-    glfwSetCursorPosCallback(windowHandle, (win, xpos, ypos) -> {
-        if (rightMouseDown) {
-            deltaX = (float)(xpos - prevX) * MOUSE_SENSITIVITY;
-            deltaY = (float)(ypos - prevY) * MOUSE_SENSITIVITY;
-        }
-        else if (middleMouseDown) {
-            panX = (float)(xpos - prevX);
-            panY = (float)(ypos - prevY);
-        }
-        prevX = xpos;
-        prevY = ypos;
-    });
+        glfwSetCursorPosCallback(windowHandle, (win, xpos, ypos) -> {
+            if (rightMouseDown) {
+                deltaX = (float) (xpos - prevX) * MOUSE_SENSITIVITY;
+                deltaY = (float) (ypos - prevY) * MOUSE_SENSITIVITY;
+            } else if (middleMouseDown) {
+                panX = (float) (xpos - prevX);
+                panY = (float) (ypos - prevY);
+            }
+            prevX = xpos;
+            prevY = ypos;
+        });
 
-    glfwSetMouseButtonCallback(windowHandle, (win, button, action, mods) -> {
-        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            rightMouseDown = (action == GLFW_PRESS);
-        }
-        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-            middleMouseDown = (action == GLFW_PRESS);
-        }
-    });
+        glfwSetMouseButtonCallback(windowHandle, (win, button, action, mods) -> {
+            if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+                rightMouseDown = (action == GLFW_PRESS);
+            } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+                middleMouseDown = (action == GLFW_PRESS);
+            }
+        });
 
-    glfwSetScrollCallback(windowHandle, (win, xoffset, yoffset) -> {
-        deltaZ += (float)yoffset * MOUSE_SENSITIVITY;
-    });
+        glfwSetScrollCallback(windowHandle, (win, xoffset, yoffset) -> {
+            deltaZ += (float) yoffset * MOUSE_SENSITIVITY;
+        });
 
-    glfwSetKeyCallback(windowHandle, (win, key, scancode, action, mods) -> {
-        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-            resetPressed = true;
-        }
-    });
-}
+        glfwSetKeyCallback(windowHandle, (win, key, scancode, action, mods) -> {
+            if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+                resetPressed = true;
+            }
+            if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+                resetScenePressed = true;
+            }
+            if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+                placeRandomObjectPressed = true;
+            }
+            if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+                place100RandomObjectsPressed = true;
+            }
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+                glfwSetWindowShouldClose(windowHandle, true);
+            }
+        });
+    }
 
     public float consumeDeltaX() {
         float dx = -deltaX;
@@ -245,6 +266,24 @@ public class Window {
     public boolean consumeReset() {
         boolean wasPressed = resetPressed;
         resetPressed = false;
+        return wasPressed;
+    }
+
+    public boolean consumeResetScene() {
+        boolean wasPressed = resetScenePressed;
+        resetScenePressed = false;
+        return wasPressed;
+    }
+
+    public boolean consumePlaceRandomObject() {
+        boolean wasPressed = placeRandomObjectPressed;
+        placeRandomObjectPressed = false;
+        return wasPressed;
+    }
+
+    public boolean consumePlace100RandomObjects() {
+        boolean wasPressed = place100RandomObjectsPressed;
+        place100RandomObjectsPressed = false;
         return wasPressed;
     }
 }

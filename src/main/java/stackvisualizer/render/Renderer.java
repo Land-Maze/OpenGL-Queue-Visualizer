@@ -15,15 +15,23 @@ public class Renderer {
 
   public void renderAll(Matrix4f view, Matrix4f projection, Vector3f viewPos, float time) {
     Vector3f lightPos = new Vector3f(
-        (float) Math.sin(time) * 5.0f,
-        1.0f + (float) Math.sin(time * 2.0f) * 0.5f,
-        (float) Math.cos(time) * 5.0f);
+        (float) (Math.sin(time) * 5.0f + Math.sin(time * 3.0f) * 0.5f),
+        (float) (1.0f + Math.sin(time * 2.0f) * 0.5f + Math.cos(time * 4.0f) * 0.25f),
+        (float) (Math.cos(time) * 5.0f + Math.sin(time * 1.5f) * 0.5f));
+
     for (Entity obj : objects) {
       obj.render(view, projection, viewPos, lightPos);
     }
   }
 
   public void reset() {
+    objects.clear();
+  }
+
+  public void clean(){
+    for (Entity obj : objects) {
+      obj.cleanup();
+    }
     objects.clear();
   }
 
