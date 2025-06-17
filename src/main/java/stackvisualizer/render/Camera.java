@@ -48,4 +48,12 @@ public class Camera {
       yaw = 0.0f;
       pitch = 20.0f;
     }
+
+    public Vector3f getPosition() {
+        return new Vector3f(
+            (float)(Math.cos(Math.toRadians(pitch)) * Math.sin(Math.toRadians(yaw)) * distance),
+            (float)(Math.sin(Math.toRadians(pitch)) * distance),
+            (float)(Math.cos(Math.toRadians(pitch)) * Math.cos(Math.toRadians(yaw)) * distance)
+        ).add(target);
+    }
 }

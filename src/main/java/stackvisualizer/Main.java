@@ -3,6 +3,7 @@ package stackvisualizer;
 import java.io.IOException;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import stackvisualizer.render.Camera;
@@ -11,6 +12,7 @@ import stackvisualizer.render.Shader;
 import stackvisualizer.util.Window;
 
 public class Main {
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
 
         System.out.println("Stack Visualizer");
@@ -21,6 +23,8 @@ public class Main {
         Renderer renderer = new Renderer();
         Camera camera = new Camera();
         Shader shader;
+
+        Vector3f lightPos = new Vector3f(1.2f, 1.0f, 2.0f);
 
         renderer.init();
 
@@ -54,7 +58,9 @@ public class Main {
             Matrix4f view = camera.getViewMatrix();
             Matrix4f projection = camera.getProjectionMatrix(45.0f, window.getAspectRatio(), 0.1f, 100.0f);
 
-            renderer.render(shader, model, view, projection, new Vector4f(0.902f, 0.31f, 0.549f, 1.0f));
+            Vector3f viewPos = camera.getPosition();
+
+            renderer.render(shader, model, view, projection, new Vector4f(0.902f, 0.31f, 0.549f, 1.0f), lightPos, viewPos);
 
             window.update();
         }

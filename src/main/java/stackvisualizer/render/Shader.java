@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.GL11.GL_FALSE;
@@ -26,6 +27,7 @@ import static org.lwjgl.opengl.GL20.glGetShaderi;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glLinkProgram;
 import static org.lwjgl.opengl.GL20.glShaderSource;
+import static org.lwjgl.opengl.GL20.glUniform3f;
 import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL20.glUseProgram;
@@ -71,6 +73,14 @@ public class Shader {
         matrix.get(buffer);
         glUniformMatrix4fv(location, false, buffer);
     }
+
+    public void setUniform(String name, Vector3f vec) {
+        int location = glGetUniformLocation(programId, name);
+        if (location != -1) {
+            glUniform3f(location, vec.x, vec.y, vec.z);
+        }
+    }
+
 
     public void setUniform(String name, Vector4f vec) {
         int location = glGetUniformLocation(programId, name);
