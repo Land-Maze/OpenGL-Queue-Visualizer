@@ -1,5 +1,8 @@
 # Stack Visualizer
 
+# Showcase
+![Image](https://github.com/user-attachments/assets/993dcdb1-7a42-406b-b349-b35d77475db6)
+
 ## How to run the Stack Visualizer
 ### Linux
 ```bash
