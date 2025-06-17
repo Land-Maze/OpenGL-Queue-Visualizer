@@ -2,6 +2,10 @@ package stackvisualizer.util;
 
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
 import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
@@ -14,8 +18,11 @@ import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.glfw.GLFW.glfwSetCursorPosCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetMouseButtonCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowShouldClose;
 import static org.lwjgl.glfw.GLFW.glfwShowWindow;
@@ -33,8 +40,9 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.system.MemoryUtil.NULL;
-
 public class Window {
+
+    private static final float MOUSE_SENSITIVITY = 2f;
 
     private long windowHandle;
 
@@ -44,6 +52,14 @@ public class Window {
 
     private boolean resized;
     private boolean vSync;
+
+    private double prevX, prevY;
+    private float deltaX = 0, deltaY = 0, deltaZ = 0;
+    private float panX = 0, panY = 0;
+
+    private boolean rightMouseDown = false;
+    private boolean middleMouseDown = false;
+    private boolean resetPressed = false;
 
     /**
      * Constructs a new Window instance with specified dimensions, title, and VSync setting.
@@ -112,6 +128,8 @@ public class Window {
 
         glClearColor(0f, 0f, 0f, 1f);  // black background
         glEnable(GL_DEPTH_TEST);
+
+        setupCallbacks();
     }
 
     public void update() {
@@ -154,5 +172,75 @@ public class Window {
 
     public float getAspectRatio() {
         return (float) width / (float) height;
+    }
+
+    private void setupCallbacks() {
+    glfwSetCursorPosCallback(windowHandle, (win, xpos, ypos) -> {
+        if (rightMouseDown) {
+            deltaX = (float)(xpos - prevX) * MOUSE_SENSITIVITY;
+            deltaY = (float)(ypos - prevY) * MOUSE_SENSITIVITY;
+        }
+        else if (middleMouseDown) {
+            panX = (float)(xpos - prevX);
+            panY = (float)(ypos - prevY);
+        }
+        prevX = xpos;
+        prevY = ypos;
+    });
+
+    glfwSetMouseButtonCallback(windowHandle, (win, button, action, mods) -> {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            rightMouseDown = (action == GLFW_PRESS);
+        }
+        else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+            middleMouseDown = (action == GLFW_PRESS);
+        }
+    });
+
+    glfwSetScrollCallback(windowHandle, (win, xoffset, yoffset) -> {
+        deltaZ += (float)yoffset * MOUSE_SENSITIVITY;
+    });
+
+    glfwSetKeyCallback(windowHandle, (win, key, scancode, action, mods) -> {
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+            resetPressed = true;
+        }
+    });
+}
+
+    public float consumeDeltaX() {
+        float dx = -deltaX;
+        deltaX = 0;
+        return dx;
+    }
+
+    public float consumeDeltaY() {
+        float dy = -deltaY;
+        deltaY = 0;
+        return dy;
+    }
+
+    public float consumeDeltaZ() {
+        float dz = -deltaZ;
+        deltaZ = 0;
+        return dz;
+    }
+
+    public float consumePanX() {
+        float x = -panX;
+        panX = 0;
+        return x;
+    }
+
+    public float consumePanY() {
+        float y = -panY;
+        panY = 0;
+        return y;
+    }
+
+    public boolean consumeReset() {
+        boolean wasPressed = resetPressed;
+        resetPressed = false;
+        return wasPressed;
     }
 }

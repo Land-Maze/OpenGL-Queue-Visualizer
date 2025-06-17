@@ -4,65 +4,48 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Camera {
-    private final Vector3f position;
-    private final Vector3f front;
-    private final Vector3f up;
-    private final Vector3f right;
-    private final Vector3f worldUp;
-
-    private float yaw;
-    private float pitch;
-
-    public Camera(Vector3f position) {
-        this.position = position;
-        this.worldUp = new Vector3f(0.0f, 1.0f, 0.0f);
-        this.yaw = -90.0f; // look towards -Z by default
-        this.pitch = 0.0f;
-
-        this.front = new Vector3f(0.0f, 0.0f, -1.0f);
-        this.up = new Vector3f();
-        this.right = new Vector3f();
-        updateVectors();
-    }
+    private final Vector3f target = new Vector3f(0, 0, 0);
+    private float distance = 5.0f;
+    private float yaw = 0.0f;
+    private float pitch = 20.0f;
 
     public Matrix4f getViewMatrix() {
-        Vector3f center = new Vector3f(position).add(front);
-        return new Matrix4f().lookAt(position, center, up);
+        Vector3f position = new Vector3f(
+            (float)(Math.cos(Math.toRadians(pitch)) * Math.sin(Math.toRadians(yaw)) * distance),
+            (float)(Math.sin(Math.toRadians(pitch)) * distance),
+            (float)(Math.cos(Math.toRadians(pitch)) * Math.cos(Math.toRadians(yaw)) * distance)
+        ).add(target);
+
+        return new Matrix4f().lookAt(position, target, new Vector3f(0, 1, 0));
     }
 
     public Matrix4f getProjectionMatrix(float fov, float aspect, float near, float far) {
-        return new Matrix4f().perspective((float) Math.toRadians(fov), aspect, near, far);
-    }
-
-    public void move(Vector3f delta) {
-        position.add(delta);
+        return new Matrix4f().perspective((float)Math.toRadians(fov), aspect, near, far);
     }
 
     public void rotate(float deltaYaw, float deltaPitch) {
         yaw += deltaYaw;
-        pitch += deltaPitch;
-
-        // Clamp pitch to avoid gimbal lock
-        pitch = Math.max(-89.0f, Math.min(89.0f, pitch));
-        updateVectors();
+        pitch = Math.max(-89.9f, Math.min(89.9f, pitch + deltaPitch));
     }
 
-    private void updateVectors() {
-        Vector3f newFront = new Vector3f();
-        newFront.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
-        newFront.y = (float) Math.sin(Math.toRadians(pitch));
-        newFront.z = (float) Math.sin(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
-        front.set(newFront).normalize();
-
-        right.set(front).cross(worldUp).normalize();
-        up.set(right).cross(front).normalize();
+    public void zoom(float delta) {
+        distance = Math.max(0.1f, distance + delta);
     }
 
-    public Vector3f getPosition() {
-        return position;
+    public void pan(float dx, float dy) {
+        Matrix4f view = getViewMatrix();
+        Vector3f right = new Vector3f(view.m00(), view.m10(), view.m20()).normalize();
+        Vector3f up = new Vector3f(view.m01(), view.m11(), view.m21()).normalize();
+
+        right.mul(-dx);
+        up.mul(dy);
+        target.add(right).add(up);
     }
 
-    public Vector3f getFront() {
-        return front;
+    public void reset() {
+      target.set(0, 0, 0);
+      distance = 5.0f;
+      yaw = 0.0f;
+      pitch = 20.0f;
     }
 }
