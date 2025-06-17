@@ -2,8 +2,6 @@ package stackvisualizer.render;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -32,12 +30,14 @@ import static org.lwjgl.opengl.GL20.glUniform4f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 
+import static stackvisualizer.util.ResourceLoader.loadResourceAsStream;
+
 public class Shader {
     private final int programId;
 
     public Shader(String vertexPath, String fragmentPath) throws IOException {
-        String vertexCode = new String(Files.readAllBytes(Paths.get(vertexPath)));
-        String fragmentCode = new String(Files.readAllBytes(Paths.get(fragmentPath)));
+        String vertexCode = new String(loadResourceAsStream(vertexPath).readAllBytes());
+        String fragmentCode = new String(loadResourceAsStream(fragmentPath).readAllBytes());
 
         int vertexId = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexId, vertexCode);

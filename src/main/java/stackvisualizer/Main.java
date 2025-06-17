@@ -5,10 +5,17 @@ import java.io.IOException;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glOrtho;
+import static org.lwjgl.opengl.GL11.glViewport;
 
 import stackvisualizer.render.Camera;
 import stackvisualizer.render.Renderer;
 import stackvisualizer.render.Shader;
+import stackvisualizer.render.TextRenderer;
 import stackvisualizer.util.Window;
 
 public class Main {
@@ -29,32 +36,41 @@ public class Main {
         renderer.init();
 
         try {
-            shader = new Shader("src/main/resources/shaders/cube.vert", "src/main/resources/shaders/cube.frag");
+            shader = new Shader("shaders/cube.vert", "shaders/cube.frag");
         } catch (IOException e) {
             System.err.println("Error loading shader: " + e.getMessage());
             e.printStackTrace();
             return;
         }
 
+        TextRenderer textRenderer = new TextRenderer("fonts/RobotoMono-VariableFont_wght.ttf", 24f);
+
         long lastTime = System.nanoTime();
         int frames = 0;
         float fps = 0;
+        float accumulatedTime = 0;
         
         // Main loop
         while (!window.shouldClose()) {
             long now = System.nanoTime();
             float delta = (now - lastTime) / 1_000_000_000.0f;
             lastTime = now;
-
+            
+            accumulatedTime += delta;
             frames++;
-            if (delta >= 0.0f) {
-                fps = frames / delta;
+            if (accumulatedTime >= 0.1f) { // 1/10 of a second
+                fps = frames / accumulatedTime;
                 frames = 0;
-                lastTime = now;
+                accumulatedTime = 0;
             }
-            System.out.printf("FPS: %.2f\n", fps);
 
             window.clear();
+
+            if (window.isResized()) {
+                glViewport(0, 0, window.getWidth(), window.getHeight());
+                window.setResized(false);
+            }
+
 
             if (window.consumeReset()) {
                 camera.reset();
@@ -78,12 +94,24 @@ public class Main {
 
             renderer.render(shader, model, view, projection, new Vector4f(0.902f, 0.31f, 0.549f, 1.0f), lightPos, viewPos);
 
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, window.getWidth(), window.getHeight(), 0, -1, 1);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            textRenderer.renderText(String.format("FPS: %.2f", fps), 10, 30);
+
             window.update();
         }
 
         // Cleanup
         {
             window.destroy();
+            renderer.cleanup();
+            shader.cleanup();
+            textRenderer.cleanup();
+            System.out.println("Application closed successfully.");
         }
     }
 }

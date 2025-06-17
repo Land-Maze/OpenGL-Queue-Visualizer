@@ -56,4 +56,5 @@ public class Camera {
             (float)(Math.cos(Math.toRadians(pitch)) * Math.cos(Math.toRadians(yaw)) * distance)
         ).add(target);
     }
+
 }
