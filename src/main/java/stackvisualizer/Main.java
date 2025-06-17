@@ -35,9 +35,25 @@ public class Main {
             e.printStackTrace();
             return;
         }
+
+        long lastTime = System.nanoTime();
+        int frames = 0;
+        float fps = 0;
         
         // Main loop
         while (!window.shouldClose()) {
+            long now = System.nanoTime();
+            float delta = (now - lastTime) / 1_000_000_000.0f;
+            lastTime = now;
+
+            frames++;
+            if (delta >= 0.0f) {
+                fps = frames / delta;
+                frames = 0;
+                lastTime = now;
+            }
+            System.out.printf("FPS: %.2f\n", fps);
+
             window.clear();
 
             if (window.consumeReset()) {
