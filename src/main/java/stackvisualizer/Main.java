@@ -28,58 +28,15 @@ public class Main {
     @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
 
-        System.out.println("Stack Visualizer");
-
+        /***********************************************************
+         * ============================================================
+         * Initialization of the application
+         * ============================================================
+         ***********************************************************/
         Window window = new Window(1280, 720, "Stack Visualizer", true);
         window.init();
 
-        Mesh cubeMesh = new Mesh(Cube.getVertices());
-        Material cubeMaterial;
-        try {
-            cubeMaterial = new Material(new Shader("shaders/cube.vert", "shaders/cube.frag"), new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
-        } catch (IOException e) {
-            System.err.println("Error loading cube shader: " + e.getMessage());
-            e.printStackTrace();
-            return;
-        }
-        ModelMatrix cube1ModelMatrix = new ModelMatrix();
-        cube1ModelMatrix.setPosition(0, 0, 0);
-        Entity cube1 = new Entity("Cube1", cubeMesh, cubeMaterial, cube1ModelMatrix);
-
-        ModelMatrix cube2ModelMatrix = new ModelMatrix();
-        cube2ModelMatrix.setPosition(1.5f, 0, 0);
-        Entity cube2 = new Entity("Cube2", cubeMesh, cubeMaterial, cube2ModelMatrix);
-
-        ModelMatrix cube3ModelMatrix = new ModelMatrix();
-        cube3ModelMatrix.setPosition(-1.5f, 0, 0);
-        cube3ModelMatrix.setRotation(0, 45, 0);
-        Material cube3Material;
-        
-        try {
-            cube3Material = new Material(new Shader("shaders/cube.vert", "shaders/cube.frag"), new Vector4f(0.0f, 0.0f, 1f, 0.4f));
-        } catch (IOException e) {
-            System.err.println("Error loading cube shader: " + e.getMessage());
-            e.printStackTrace();
-            return;
-        }
-
-        Entity cube3 = new Entity("Cube3", cubeMesh, cube3Material, cube3ModelMatrix);
-
-        Renderer renderer = new Renderer();
-        renderer.addObject(cube1);
-        renderer.addObject(cube2);
-        renderer.addObject(cube3);
-        
         Camera camera = new Camera();
-        Shader shader;
-
-        try {
-            shader = new Shader("shaders/cube.vert", "shaders/cube.frag");
-        } catch (IOException e) {
-            System.err.println("Error loading shader: " + e.getMessage());
-            e.printStackTrace();
-            return;
-        }
 
         TextRenderer textRenderer = new TextRenderer("fonts/RobotoMono-VariableFont_wght.ttf", 24f);
 
@@ -87,13 +44,61 @@ public class Main {
         int frames = 0;
         float fps = 0;
         float accumulatedTime = 0;
-        
-        // Main loop
+
+        /***********************************************************
+         * Shared resources
+         ***********************************************************/
+        Shader lightShader;
+        try {
+            lightShader = new Shader("shaders/light.vert", "shaders/light.frag");
+        } catch (IOException e) {
+            System.err.println("Error loading light shader: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+        System.out.println("Light shader loaded successfully.");
+
+        Mesh cubeMesh = new Mesh(Cube.getVertices());
+
+        Material cubeMaterial = new Material(lightShader, new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
+
+        System.out.println("Cube mesh and material created successfully.");
+
+        /***********************************************************
+         * Creating entities
+         ***********************************************************/
+        Entity cube1 = new Entity("Cube 1", cubeMesh, cubeMaterial, new ModelMatrix()
+                .translate(new Vector3f(-2.0f, 1.0f, 0.0f))
+                .scale(new Vector3f(1.0f, 1.0f, 1.0f)));
+        Entity cube2 = new Entity("Cube 2", cubeMesh, cubeMaterial, new ModelMatrix()
+                .translate(new Vector3f(0.0f, 0.0f, 0.0f))
+                .scale(new Vector3f(1.0f, 1.0f, 1.0f)));
+        Entity cube3 = new Entity("Cube 3", cubeMesh, cubeMaterial, new ModelMatrix()
+                .translate(new Vector3f(2.0f, -1.0f, 0.0f))
+                .scale(new Vector3f(1.0f, 1.0f, 1.0f)));
+
+        Renderer renderer = new Renderer();
+        renderer.addObject(cube1);
+        renderer.addObject(cube2);
+        renderer.addObject(cube3);
+
+        System.out.println("Entities created successfully.");
+
+        /***********************************************************
+         * ============================================================
+         * Main loop
+         * ============================================================
+         ***********************************************************/
+
         while (!window.shouldClose()) {
+
+            /***********************************************************
+             * Calculating FPS
+             ***********************************************************/
             long now = System.nanoTime();
             float delta = (now - lastTime) / 1_000_000_000.0f;
             lastTime = now;
-            
+
             accumulatedTime += delta;
             frames++;
             if (accumulatedTime >= 0.1f) { // 1/10 of a second
@@ -104,6 +109,9 @@ public class Main {
 
             window.clear();
 
+            /***********************************************************
+             * Handling window events and input
+             ***********************************************************/
             if (window.isResized()) {
                 glViewport(0, 0, window.getWidth(), window.getHeight());
                 window.setResized(false);
@@ -113,15 +121,22 @@ public class Main {
                 camera.reset();
             }
 
+            // Rotating with mouse
             float dx = window.consumeDeltaX();
             float dy = window.consumeDeltaY();
             camera.rotate(dx * 0.3f, -dy * 0.3f);
-            float dz = window.consumeDeltaZ();
-            camera.zoom(dz * 0.1f);
 
+            // Panning with mouse
             float px = window.consumePanX();
             float py = window.consumePanY();
             camera.pan(px * 0.005f, py * 0.005f);
+            // Zooming with mouse wheel
+            float dz = window.consumeDeltaZ();
+            camera.zoom(dz * 0.1f);
+
+            /***********************************************************
+             * Rendering the scene
+             ***********************************************************/
 
             Matrix4f view = camera.getViewMatrix();
             Matrix4f projection = camera.getProjectionMatrix(45.0f, window.getAspectRatio(), 0.1f, 100.0f);
@@ -130,6 +145,9 @@ public class Main {
 
             renderer.renderAll(view, projection, viewPos, (float) glfwGetTime());
 
+            /***********************************************************
+             * Rendering text overlay
+             ***********************************************************/
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             glOrtho(0, window.getWidth(), window.getHeight(), 0, -1, 1);
@@ -144,8 +162,7 @@ public class Main {
         // Cleanup
         {
             window.destroy();
-            renderer.cleanup();
-            shader.cleanup();
+            renderer.getObjects().forEach(Entity::cleanup);
             textRenderer.cleanup();
             System.out.println("Application closed successfully.");
         }

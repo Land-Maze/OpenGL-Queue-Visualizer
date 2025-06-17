@@ -54,9 +54,11 @@ public class Mesh {
     public int getVaoId() {
         return vaoId;
     }
+
     public int getVboId() {
         return vboId;
     }
+
     public int getVertexCount() {
         return vertexCount;
     }

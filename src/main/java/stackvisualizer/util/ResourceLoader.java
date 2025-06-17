@@ -8,8 +8,6 @@ import java.nio.channels.Channels;
 
 import org.lwjgl.BufferUtils;
 
-
-
 public class ResourceLoader {
 
   /**
@@ -45,46 +43,47 @@ public class ResourceLoader {
   /**
    * Reads a resource from the classpath into a ByteBuffer.
    *
-   * @param resource the name of the resource to read.
+   * @param resource   the name of the resource to read.
    * @param bufferSize the initial size of the ByteBuffer.
    * @return a ByteBuffer containing the resource data.
    * @throws IOException if an I/O error occurs while reading the resource.
    */
   public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
-      ByteBuffer buffer;
+    ByteBuffer buffer;
 
-      try (var source = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)) {
-          if (source == null)
-              throw new IOException("Resource not found: " + resource);
+    try (var source = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource)) {
+      if (source == null)
+        throw new IOException("Resource not found: " + resource);
 
-          try (var rbc = Channels.newChannel(source)) {
-              buffer = BufferUtils.createByteBuffer(bufferSize);
+      try (var rbc = Channels.newChannel(source)) {
+        buffer = BufferUtils.createByteBuffer(bufferSize);
 
-              while (true) {
-                  int bytes = rbc.read(buffer);
-                  if (bytes == -1)
-                      break;
-                  if (buffer.remaining() == 0)
-                      buffer = resizeBuffer(buffer, buffer.capacity() * 2);
-              }
-          }
+        while (true) {
+          int bytes = rbc.read(buffer);
+          if (bytes == -1)
+            break;
+          if (buffer.remaining() == 0)
+            buffer = resizeBuffer(buffer, buffer.capacity() * 2);
+        }
       }
+    }
 
-      buffer.flip();
-      return buffer;
+    buffer.flip();
+    return buffer;
   }
 
   /**
    * Resizes a ByteBuffer to a new capacity.
    *
-   * @param buffer the ByteBuffer to resize.
+   * @param buffer      the ByteBuffer to resize.
    * @param newCapacity the new capacity for the ByteBuffer.
-   * @return a new ByteBuffer with the specified capacity containing the data from the original buffer.
+   * @return a new ByteBuffer with the specified capacity containing the data from
+   *         the original buffer.
    */
   public static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
-        ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
-        buffer.flip();
-        newBuffer.put(buffer);
-        return newBuffer;
-    }
+    ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
+    buffer.flip();
+    newBuffer.put(buffer);
+    return newBuffer;
+  }
 }

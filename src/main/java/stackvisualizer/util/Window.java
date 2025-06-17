@@ -51,7 +51,7 @@ public class Window {
     private String title;
 
     private boolean resized;
-    private boolean vSync;
+    private final boolean vSync;
 
     private double prevX, prevY;
     private float deltaX = 0, deltaY = 0, deltaZ = 0;
@@ -124,11 +124,15 @@ public class Window {
 
         glfwShowWindow(windowHandle);
 
+        System.out.println("Window created: " + title + " (" + width + "x" + height + ") with VSync " + (vSync ? "enabled" : "disabled"));
+
+        System.out.println("Creating OpenGL capabilities...");
         GL.createCapabilities();
 
         glClearColor(0f, 0f, 0f, 1f);  // black background
         glEnable(GL_DEPTH_TEST);
 
+        System.out.println("Setting up callbacks...");
         setupCallbacks();
     }
 
