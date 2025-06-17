@@ -124,6 +124,28 @@ public class TextRenderer {
     quad.free();
   }
 
+  public float getTextWidth(String text) {
+    float width = 0;
+    FloatBuffer xBuf = BufferUtils.createFloatBuffer(1).put(0, 0f);
+    FloatBuffer yBuf = BufferUtils.createFloatBuffer(1).put(0, 0f);
+
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (c < 32 || c >= 128)
+        continue; // ignore non-printable
+
+      STBTTAlignedQuad quad = STBTTAlignedQuad.malloc();
+      STBTruetype.stbtt_GetBakedQuad(charData, BITMAP_W, BITMAP_H, c - 32, xBuf, yBuf, quad, true);
+      width += quad.x1() - quad.x0();
+      quad.free();
+    }
+    return width;
+  }
+
+  public float getTextHeight() {
+    return charData.get(0).x1() - charData.get(0).x0();
+  }
+
   public void cleanup() {
     glDeleteTextures(fontTextureID);
   }

@@ -1,11 +1,13 @@
 package stackvisualizer.util;
 
+import org.joml.Vector2d;
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_X;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -16,6 +18,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_VISIBLE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
 import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
 import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
+import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwInit;
@@ -44,6 +47,8 @@ import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
+import stackvisualizer.ui.UIManager;
+
 public class Window {
 
     private static final float MOUSE_SENSITIVITY = 2f;
@@ -57,6 +62,8 @@ public class Window {
     private boolean resized;
     private final boolean vSync;
 
+    private UIManager uiManager;
+
     private double prevX, prevY;
     private float deltaX = 0, deltaY = 0, deltaZ = 0;
     private float panX = 0, panY = 0;
@@ -69,6 +76,9 @@ public class Window {
     private boolean placeRandomObjectPressed = false;
     private boolean place100RandomObjectsPressed = false;
 
+    private boolean leftMouseButtonClicked = false;
+    private Vector2d mouseClickPosition = new Vector2d(0, 0);
+
     /**
      * Constructs a new Window instance with specified dimensions, title, and VSync
      * setting.
@@ -76,14 +86,15 @@ public class Window {
      * @param width  the width of the window in pixels
      * @param height the height of the window in pixels
      * @param title  the title of the window
-     * @param vSync  vertical synchronization (VSync)
+     * @param vSync  vertical synchronization (VSync)glfwGetCursorPos
      */
-    public Window(int width, int height, String title, boolean vSync) {
+    public Window(int width, int height, String title, boolean vSync, UIManager uiManager) {
         this.width = width;
         this.height = height;
         this.title = title;
         this.vSync = vSync;
         this.resized = false;
+        this.uiManager = uiManager;
     }
 
     /**
@@ -185,7 +196,7 @@ public class Window {
         this.resized = resized;
     }
 
-    public long getWindowHandle() {
+    public long getWindowHaglfwGetCursorPosndle() {
         return windowHandle;
     }
 
@@ -201,16 +212,34 @@ public class Window {
             } else if (middleMouseDown) {
                 panX = (float) (xpos - prevX);
                 panY = (float) (ypos - prevY);
+            } else {
+                deltaX = 0;
+                deltaY = 0;
             }
             prevX = xpos;
             prevY = ypos;
         });
 
         glfwSetMouseButtonCallback(windowHandle, (win, button, action, mods) -> {
-            if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-                rightMouseDown = (action == GLFW_PRESS);
-            } else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-                middleMouseDown = (action == GLFW_PRESS);
+            switch (button) {
+                case GLFW_MOUSE_BUTTON_RIGHT -> rightMouseDown = (action == GLFW_PRESS);
+                case GLFW_MOUSE_BUTTON_MIDDLE -> middleMouseDown = (action == GLFW_PRESS);
+                case GLFW_MOUSE_BUTTON_LEFT -> {
+                    try (var stack = org.lwjgl.system.MemoryStack.stackPush()) {
+                        var xPosBuffer = stack.mallocDouble(1);
+                        var yPosBuffer = stack.mallocDouble(1);
+                        glfwGetCursorPos(windowHandle, xPosBuffer, yPosBuffer);
+                        mouseClickPosition.set(xPosBuffer.get(0), yPosBuffer.get(0));
+                        if (action == GLFW_PRESS) {
+                            leftMouseButtonClicked = true;
+                        }
+                    }
+                }
+                default -> {
+                    rightMouseDown = false;
+                    middleMouseDown = false;
+                    // leftMouseDown = false;
+                }
             }
         });
 
@@ -289,5 +318,13 @@ public class Window {
         boolean wasPressed = place100RandomObjectsPressed;
         place100RandomObjectsPressed = false;
         return wasPressed;
+    }
+
+    public Vector2d consumeLeftMouseButtonClick() {
+        if (leftMouseButtonClicked) {
+            leftMouseButtonClicked = false;
+            return mouseClickPosition;
+        }
+        return null;
     }
 }

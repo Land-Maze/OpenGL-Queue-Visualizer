@@ -20,7 +20,7 @@ public class TextInput extends UIElement {
         if (active) text.append(c);
     }
 
-    public void click(float px, float py) {
+    public void click(double  px, double py) {
         active = contains(px, py);
     }
 

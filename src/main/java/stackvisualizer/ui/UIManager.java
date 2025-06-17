@@ -3,6 +3,8 @@ package stackvisualizer.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.joml.Vector2f;
+
 import stackvisualizer.render.RectRenderer;
 import stackvisualizer.render.TextRenderer;
 
@@ -31,10 +33,10 @@ public class UIManager {
     elements.remove(key);
   }
 
-  public void onClick(float x, float y) {
+  public void onClick(double xpos, double ypos) {
     for (UIElement e : elements.values()) {
-      if (e instanceof Button b) b.click(x, y);
-      if (e instanceof TextInput t) t.click(x, y);
+      if (e instanceof Button b) b.click(xpos, ypos);
+      if (e instanceof TextInput t) t.click(xpos, ypos);
     }
   }
 
@@ -52,8 +54,10 @@ public class UIManager {
     }
   }
 
-  public void updateAll() {
+  public void updateAll(Vector2f screenSize) {
     for (UIElement e : elements.values()) {
+      e.screenWidth = (int) screenSize.x;
+      e.screenHeight = (int) screenSize.y;
       e.update();
     }
   }

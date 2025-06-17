@@ -11,7 +11,7 @@ public abstract class UIElement {
     protected int screenHeight, screenWidth;
     public abstract void render();
     public abstract void update();
-    public boolean contains(float px, float py) {
+    public boolean contains(double px, double py) {
         return px >= x && px <= x + width && py >= y && py <= y + height;
     }
     public boolean isActive() {

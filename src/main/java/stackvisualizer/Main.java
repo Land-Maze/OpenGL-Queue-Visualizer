@@ -3,6 +3,7 @@ package stackvisualizer;
 import java.io.IOException;
 
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
@@ -23,6 +24,7 @@ import stackvisualizer.render.RectRenderer;
 import stackvisualizer.render.Renderer;
 import stackvisualizer.render.Shader;
 import stackvisualizer.render.TextRenderer;
+import stackvisualizer.ui.Button;
 import stackvisualizer.ui.Label;
 import stackvisualizer.ui.UIManager;
 import stackvisualizer.util.Window;
@@ -35,17 +37,19 @@ public class Main {
          * Initialization of the application
          * ============================================================
          ***********************************************************/
-        Window window = new Window(1280, 720, "Stack Visualizer", true);
-        window.init();
+        
+        UIManager uiManager = null;
 
-        Camera camera = new Camera();
+        Window window = new Window(1280, 720, "Stack Visualizer", true, uiManager);
+        window.init();
 
         TextRenderer textRenderer = new TextRenderer("fonts/RobotoMono-VariableFont_wght.ttf", 18f);
         RectRenderer rectRenderer = new RectRenderer();
         rectRenderer.init();
+        uiManager = new UIManager(rectRenderer, textRenderer);
 
-        
-        UIManager uiManager = new UIManager(rectRenderer, textRenderer);
+
+        Camera camera = new Camera();
 
         /***********************************************************
          * ============================================================
@@ -70,6 +74,18 @@ public class Main {
         uiManager.add("used-memory-label", new Label("Used Memory: 0 MB", 10, window.getHeight() - 60, 300, 30));
         uiManager.add("free-memory-label", new Label("Free Memory: 0 MB", 10, window.getHeight() - 40, 300, 30));
         uiManager.add("max-memory-label", new Label("Max Memory: 0 MB", 10, window.getHeight() - 20, 300, 30));
+
+        /***********************************************************
+         * Bottom center overlay
+         ***********************************************************/
+        uiManager.add("place-box-button", new Button("Add",
+                window.getWidth() / 2 - 50,
+                window.getHeight() - 60,
+                100,
+                40,
+                () -> {
+                    System.out.println("Place Box button clicked.");
+                }));
 
         long lastTime = System.nanoTime();
         int frames = 0;
@@ -224,6 +240,13 @@ public class Main {
                 System.out.println("100 random objects placed.");
             }
 
+            var click_position = window.consumeLeftMouseButtonClick();
+            if(click_position != null) {
+                double mouseX = click_position.x;
+                double mouseY = click_position.y;
+                uiManager.onClick(mouseX, mouseY);
+            }
+
             /***********************************************************
              * Rendering the scene
              ***********************************************************/
@@ -257,14 +280,16 @@ public class Main {
             /***********************************************************
              * Bottom left corner text overlay
              ***********************************************************/
-            uiManager.get("total-memory-label").setText(String.format("Total Memory: %.2f MB", runtime.totalMemory() / 1024.0 / 1024.0));
-            uiManager.get("used-memory-label").setText(String.format("Used Memory: %.2f MB", usedMemory / 1024.0 / 1024.0));
-            uiManager.get("free-memory-label").setText(String.format("Free Memory: %.2f MB", freeMemory / 1024.0 / 1024.0));
-            uiManager.get("max-memory-label").setText(String.format("Max Memory: %.2f MB", maxMemory / 1024.0 / 1024.0));
-                    
-            
-            
-            uiManager.updateAll();
+            uiManager.get("total-memory-label")
+                    .setText(String.format("Total Memory: %.2f MB", runtime.totalMemory() / 1024.0 / 1024.0));
+            uiManager.get("used-memory-label")
+                    .setText(String.format("Used Memory: %.2f MB", usedMemory / 1024.0 / 1024.0));
+            uiManager.get("free-memory-label")
+                    .setText(String.format("Free Memory: %.2f MB", freeMemory / 1024.0 / 1024.0));
+            uiManager.get("max-memory-label")
+                    .setText(String.format("Max Memory: %.2f MB", maxMemory / 1024.0 / 1024.0));
+
+            uiManager.updateAll(new Vector2f(window.getWidth(), window.getHeight()));
             uiManager.renderAll();
 
             window.update();

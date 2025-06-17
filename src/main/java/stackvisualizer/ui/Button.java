@@ -20,14 +20,14 @@ public class Button extends UIElement {
 
     @Override
     public void render() {
-        rectRenderer.drawRectangle(x, y, width, height, new Vector4f(0.2f, 0.2f, 0.8f, 1f), screenWidth, screenHeight);
-        textRenderer.renderText(label, x + 5, y + 5);
+        rectRenderer.drawRectangle(x, y, width, height, new Vector4f(0.5f, 0.2f, 0f, 0.2f), screenWidth, screenHeight);
+        textRenderer.renderText(label, x + (width - textRenderer.getTextWidth(label)) / 2, y + (height - textRenderer.getTextHeight()) / 2 + 5);
     }
 
     @Override
     public void update() { }
 
-    public void click(float px, float py) {
+    public void click(double px, double py) {
         if (contains(px, py)) onClick.run();
     }
 }

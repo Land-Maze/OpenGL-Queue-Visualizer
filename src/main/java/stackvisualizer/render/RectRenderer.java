@@ -4,9 +4,16 @@ import java.io.IOException;
 
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL14.GL_FUNC_ADD;
+import static org.lwjgl.opengl.GL14.glBlendEquation;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
@@ -28,7 +35,9 @@ public class RectRenderer {
     @SuppressWarnings("CallToPrintStackTrace")
     public void init() {
         float[] vertices = Quad.getVertices();
-
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         vaoId = glGenVertexArrays();
         glBindVertexArray(vaoId);
 
@@ -56,8 +65,8 @@ public class RectRenderer {
     public void drawRectangle(float x, float y, float width, float height, Vector4f color, int screenWidth, int screenHeight) {
         shader.bind();
 
-        Matrix4f ortho = new Matrix4f().ortho(0, screenWidth, screenHeight, 0, -1, 1);
-        Matrix4f model = new Matrix4f().translate(x, y, 0).scale(width, height, 1);
+        Matrix4f ortho = new Matrix4f().ortho(0, screenWidth, screenHeight, 0, -1, 0.9f);
+        Matrix4f model = new Matrix4f().translate(x, y, 0).scale(width, height, 0.9f);
 
         shader.setUniform("projection", ortho);
         shader.setUniform("model", model);
