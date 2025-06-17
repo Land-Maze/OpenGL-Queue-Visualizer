@@ -33,7 +33,14 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 import static stackvisualizer.util.ResourceLoader.loadResourceAsStream;
 
 public class Shader {
-    private final int programId;
+    private int programId;
+
+    public Shader() {
+        programId = glCreateProgram();
+        if (programId == 0) {
+            throw new RuntimeException("Failed to create shader program");
+        }
+    }
 
     public Shader(String vertexPath, String fragmentPath) throws IOException {
         String vertexCode = new String(loadResourceAsStream(vertexPath).readAllBytes());
@@ -102,6 +109,17 @@ public class Shader {
                 System.err.println("Shader compilation error in " + type + ": " + log);
             }
         }
+    }
+
+    public void set(Shader other) {
+        this.bind();
+        this.programId = other.programId;
+    }
+
+    public Shader copy() {
+        Shader copy = new Shader();
+        copy.programId = this.programId;
+        return copy;
     }
 
     public void cleanup() {

@@ -13,7 +13,12 @@ import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glViewport;
 
+import stackvisualizer.core.Cube;
 import stackvisualizer.render.Camera;
+import stackvisualizer.render.Entity;
+import stackvisualizer.render.Material;
+import stackvisualizer.render.Mesh;
+import stackvisualizer.render.ModelMatrix;
 import stackvisualizer.render.Renderer;
 import stackvisualizer.render.Shader;
 import stackvisualizer.render.TextRenderer;
@@ -28,13 +33,45 @@ public class Main {
         Window window = new Window(1280, 720, "Stack Visualizer", true);
         window.init();
 
+        Mesh cubeMesh = new Mesh(Cube.getVertices());
+        Material cubeMaterial;
+        try {
+            cubeMaterial = new Material(new Shader("shaders/cube.vert", "shaders/cube.frag"), new Vector4f(0.5f, 0.5f, 0.5f, 1.0f));
+        } catch (IOException e) {
+            System.err.println("Error loading cube shader: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+        ModelMatrix cube1ModelMatrix = new ModelMatrix();
+        cube1ModelMatrix.setPosition(0, 0, 0);
+        Entity cube1 = new Entity("Cube1", cubeMesh, cubeMaterial, cube1ModelMatrix);
+
+        ModelMatrix cube2ModelMatrix = new ModelMatrix();
+        cube2ModelMatrix.setPosition(1.5f, 0, 0);
+        Entity cube2 = new Entity("Cube2", cubeMesh, cubeMaterial, cube2ModelMatrix);
+
+        ModelMatrix cube3ModelMatrix = new ModelMatrix();
+        cube3ModelMatrix.setPosition(-1.5f, 0, 0);
+        cube3ModelMatrix.setRotation(0, 45, 0);
+        Material cube3Material;
+        
+        try {
+            cube3Material = new Material(new Shader("shaders/cube.vert", "shaders/cube.frag"), new Vector4f(0.0f, 0.0f, 1f, 0.4f));
+        } catch (IOException e) {
+            System.err.println("Error loading cube shader: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        Entity cube3 = new Entity("Cube3", cubeMesh, cube3Material, cube3ModelMatrix);
+
         Renderer renderer = new Renderer();
+        renderer.addObject(cube1);
+        renderer.addObject(cube2);
+        renderer.addObject(cube3);
+        
         Camera camera = new Camera();
         Shader shader;
-
-        float radius = 5.0f;
-
-        renderer.init();
 
         try {
             shader = new Shader("shaders/cube.vert", "shaders/cube.frag");
@@ -72,13 +109,6 @@ public class Main {
                 window.setResized(false);
             }
 
-            float time = (float) glfwGetTime();
-            Vector3f lightPos = new Vector3f(
-                (float)Math.sin(time) * radius,
-                1.0f + (float)Math.sin(time * 2.0f) * 0.5f,
-                (float)Math.cos(time) * radius
-            );
-
             if (window.consumeReset()) {
                 camera.reset();
             }
@@ -93,13 +123,12 @@ public class Main {
             float py = window.consumePanY();
             camera.pan(px * 0.005f, py * 0.005f);
 
-            Matrix4f model = new Matrix4f();
             Matrix4f view = camera.getViewMatrix();
             Matrix4f projection = camera.getProjectionMatrix(45.0f, window.getAspectRatio(), 0.1f, 100.0f);
 
             Vector3f viewPos = camera.getPosition();
 
-            renderer.render(shader, model, view, projection, new Vector4f(0.902f, 0.31f, 0.549f, 1.0f), lightPos, viewPos);
+            renderer.renderAll(view, projection, viewPos, (float) glfwGetTime());
 
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
